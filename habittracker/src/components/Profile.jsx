@@ -1,4 +1,4 @@
-// Improved Profile Component with Professional Design
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 

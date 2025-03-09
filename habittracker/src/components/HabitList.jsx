@@ -4,6 +4,8 @@ import Confetti from "react-confetti";
 const HabitList = () => {
     const [user, setUser] = useState(null);
     const [showConfetti, setShowConfetti] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+    const [habitToConfirm, setHabitToConfirm] = useState(null);
 
     useEffect(() => {
         const storedUser = localStorage.getItem("currentUser");
@@ -13,7 +15,7 @@ const HabitList = () => {
         }
 
         const parsedUser = JSON.parse(storedUser);
-        const resolvedId = parsedUser._id || parsedUser.id;  // ✅ Fallback Logic for both `_id` and `id`
+        const resolvedId = parsedUser._id || parsedUser.id;
 
         if (!resolvedId) {
             console.error("User ID missing in stored user data.");
@@ -42,15 +44,19 @@ const HabitList = () => {
         const today = new Date().toISOString().split("T")[0];
 
         if (habit.lastCompleted === today) {
-            const confirmIncrement = window.confirm(
-                "You've already marked this habit today. Do you want to mark it again?"
-            );
-            if (!confirmIncrement) return;
+            setHabitToConfirm(habit);
+            setShowModal(true);
+            return;
         }
 
+        await incrementHabit(habitId, habit);
+    };
+
+    const incrementHabit = async (habitId, habit) => {
+        const today = new Date().toISOString().split("T")[0];
         const updatedHabit = {
             ...habit,
-            streak: (habit.streak || 0) + 1,  // ✅ Ensure streak is never undefined
+            streak: (habit.streak || 0) + 1,
             lastCompleted: today,
         };
 
@@ -66,7 +72,7 @@ const HabitList = () => {
 
             const result = await response.json();
 
-            if ((result.habit?.streak || 0) % 7 === 0) {  // ✅ Fixed confetti trigger logic
+            if ((result.habit?.streak || 0) % 7 === 0) {
                 setShowConfetti(true);
                 setTimeout(() => setShowConfetti(false), 3000);
             }
@@ -83,6 +89,8 @@ const HabitList = () => {
         } catch (error) {
             console.error("Error updating habit:", error);
         }
+
+        setShowModal(false);
     };
 
     const handleDelete = async (habitId) => {
@@ -105,9 +113,49 @@ const HabitList = () => {
 
     return (
         <div className="habit-list p-6 bg-gray-100 min-h-screen">
-            {showConfetti && <Confetti numberOfPieces={300} />} {/* Confetti Animation */}
+            {showConfetti && (
+                <Confetti
+                    numberOfPieces={500}
+                    gravity={0.1}
+                    wind={0.01}
+                    initialVelocityX={3}
+                    initialVelocityY={7}
+                    recycle={false}
+                />
+            )}
+
+            {showModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-80">
+                        <h3 className="text-lg font-bold mb-3">Confirm Action</h3>
+                        <p className="text-gray-600">
+                            You've already marked <strong>{habitToConfirm?.name}</strong> today.
+                            Do you want to mark it again?
+                        </p>
+                        <div className="flex justify-end gap-2 mt-4">
+                            <button
+                                onClick={() => incrementHabit(habitToConfirm.id, habitToConfirm)}
+                                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                            >
+                                Yes
+                            </button>
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                            >
+                                No
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <h2 className="text-3xl font-bold text-center text-blue-600">Habit Tracker</h2>
-            {user && user.habits.length === 0 && <p className="text-center text-gray-500">No habits found.</p>}
+
+            {user && user.habits.length === 0 && (
+                <p className="text-center text-gray-500">No habits found.</p>
+            )}
+
             {user &&
                 user.habits.map((habit) => (
                     <div key={habit.id} className="habit-card bg-white p-4 rounded-lg shadow-md my-4">
