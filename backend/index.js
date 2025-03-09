@@ -9,25 +9,24 @@ dotenv.config(); // Load environment variables
 
 const app = express();
 
-// Middleware
+// ✅ Middleware
 app.use(express.json());
 app.use(cors());
 
-// Routes
+// ✅ Routes
 app.get('/', (req, res) => {
     res.status(200).send('Welcome to the Habit Tracker API! 🚀');
 });
 
 app.use('/users', userRoutes);
-app.use('/habits', userRoutes); // If this points to different logic, consider separating the route file
 
-// Error Handling Middleware
+// ✅ Error Handling Middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ message: 'Internal Server Error', error: err.message });
 });
 
-// Database Connection & Server Start
+// ✅ Database Connection & Server Start
 mongoose
     .connect(mongoDBURL)
     .then(() => {

@@ -3,10 +3,11 @@ import { User } from '../models/models.js';
 
 const router = express.Router();
 
-// Create User
+// ✅ Create User
 router.post('/', async (req, res) => {
     const { name, email, password } = req.body;
     const user = new User({ name, email, password, gold: 0, habits: [] });
+
     try {
         await user.save();
         res.status(201).json(user);
@@ -15,7 +16,31 @@ router.post('/', async (req, res) => {
     }
 });
 
-// Add Habit
+// ✅ Fetch All Users (For Login & Signup Validation)
+router.get('/', async (req, res) => {
+    try {
+        const users = await User.find({});
+        res.status(200).json(users);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching users', error });
+    }
+});
+
+// ✅ Fetch User by ID
+router.get('/:userId', async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching user data', error });
+    }
+});
+
+// ✅ Add Habit
 router.post('/:userId/habits', async (req, res) => {
     const { userId } = req.params;
     const { name } = req.body;
@@ -34,10 +59,10 @@ router.post('/:userId/habits', async (req, res) => {
     }
 });
 
-// Update Streak
+// ✅ Update Habit Streak (With Confirmation Logic)
 router.put('/:userId/habits/:habitId', async (req, res) => {
     const { userId, habitId } = req.params;
-    const { lastCompleted } = req.body;
+    const { lastCompleted, forceIncrement } = req.body;
 
     try {
         const user = await User.findById(userId);
@@ -46,17 +71,46 @@ router.put('/:userId/habits/:habitId', async (req, res) => {
         const habit = user.habits.find(h => h.id === habitId);
         if (!habit) return res.status(404).json({ message: 'Habit not found' });
 
-        if (habit.lastCompleted !== lastCompleted) {
-            habit.streak += 1;
-            habit.lastCompleted = lastCompleted;
+        const today = new Date().toISOString().split("T")[0];
 
-            if (habit.streak % 7 === 0) user.gold += 10; // Gold reward for weekly completion
+        // Prevent multiple streak updates unless forced
+        if (habit.lastCompleted === today && !forceIncrement) {
+            return res.status(400).json({ message: 'Streak already updated today' });
         }
-        
+
+        habit.streak += 1;
+        habit.lastCompleted = today;
+
+        // Add 10 gold for every 7-day streak
+        if (habit.streak % 7 === 0) user.gold += 10;
+
         await user.save();
         res.status(200).json({ message: 'Habit updated successfully', habit });
     } catch (error) {
         res.status(500).json({ message: 'Error updating habit', error });
+    }
+});
+
+// ✅ Delete Habit
+router.delete('/:userId/habits/:habitId', async (req, res) => {
+    const { userId, habitId } = req.params;
+
+    try {
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const updatedHabits = user.habits.filter(h => h.id !== habitId);
+
+        if (user.habits.length === updatedHabits.length) {
+            return res.status(404).json({ message: 'Habit not found' });
+        }
+
+        user.habits = updatedHabits;
+        await user.save();
+
+        res.status(200).json({ message: 'Habit deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting habit', error });
     }
 });
 

@@ -1,35 +1,91 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// App Component
+import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import HabitList from "./components/HabitList";
+import AddHabit from "./components/AddHabit";
+import Login from "./components/Auth/Login";
+import Signup from "./components/Auth/Signup";
+import Profile from "./components/Profile";
+import NavBar from "./components/NavBar";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [authenticated, setAuthenticated] = useState(localStorage.getItem("authenticated") === "true");
+  const [habits, setHabits] = useState([]);
+  const [userId, setUserId] = useState(null);
+
+  useEffect(() => {
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    if (currentUser && (currentUser._id || currentUser.id)) {
+      const resolvedId = currentUser._id || currentUser.id;
+      setUserId(resolvedId);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (authenticated && userId) fetchHabits();
+  }, [authenticated, userId]);
+
+  const fetchHabits = async () => {
+    try {
+      const response = await fetch(`http://localhost:3001/users/${userId}`);
+      if (!response.ok) throw new Error("Failed to fetch user data");
+      const user = await response.json();
+      setHabits(user.habits || []);
+    } catch (error) {
+      console.error("Error fetching habits:", error);
+    }
+  };
+
+  const handleLogin = () => {
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+    if (currentUser && (currentUser._id || currentUser.id)) {
+      const resolvedId = currentUser._id || currentUser.id;
+      setUserId(resolvedId);
+      setAuthenticated(true);
+      localStorage.setItem("authenticated", "true");
+    } else {
+      console.error("User data or ID missing in localStorage.");
+    }
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Router>
+      {authenticated && <NavBar />}
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" />} />
+        <Route
+          path="/login"
+          element={
+            authenticated ? <Navigate to="/habits" /> : <Login setAuthenticated={handleLogin} />
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            authenticated ? <Navigate to="/habits" /> : <Signup setAuthenticated={handleLogin} />
+          }
+        />
+        <Route
+          path="/habits"
+          element={
+            authenticated ? (
+              <div className="app p-6 bg-gray-100 min-h-screen text-center">
+                <h1 className="text-3xl font-bold text-blue-600 mb-4">Habit Tracker</h1>
+                <AddHabit userId={userId} setHabits={setHabits} />
+                <HabitList />
+              </div>
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
+        <Route
+          path="/profile"
+          element={authenticated ? <Profile setAuthenticated={setAuthenticated} /> : <Navigate to="/login" />}
+        />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;

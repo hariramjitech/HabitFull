@@ -1,0 +1,79 @@
+.habit-list {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 500px;
+    margin-top: 20px;
+    text-align: center;
+  }
+  
+  .habit-list h2 {
+    color: #007bff;
+    margin-bottom: 20px;
+  }
+  
+  .habit-card {
+    background: #e3f2fd;
+    border: 2px solid #007bff;
+    border-radius: 12px;
+    padding: 15px;
+    margin: 10px 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+  }
+  
+  .habit-card h3 {
+    color: #0056b3;
+    margin-bottom: 5px;
+  }
+  
+  .habit-card p {
+    margin: 2px 0;
+    font-size: 14px;
+    color: #495057;
+  }
+  
+  .habit-card button {
+    padding: 8px 15px;
+    width: 100%;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s ease;
+  }
+  
+  .habit-card button:first-of-type {
+    background-color: #28a745;
+    color: #fff;
+  }
+  
+  .habit-card button:first-of-type:hover {
+    background-color: #218838;
+  }
+  
+  .habit-card button:last-of-type {
+    background-color: #dc3545;
+    color: #fff;
+  }
+  
+  .habit-card button:last-of-type:hover {
+    background-color: #c82333;
+  }
+  
+  /* Gold Display */
+  .habit-list p:last-child {
+    background-color: #ffcc00;
+    color: #333;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+  }
+  
