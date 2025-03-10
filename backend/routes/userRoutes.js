@@ -16,7 +16,7 @@ router.post('/', async (req, res) => {
     }
 });
 
-// ✅ Fetch All Users (For Login & Signup Validation)
+// ✅ Fetch All Users
 router.get('/', async (req, res) => {
     try {
         const users = await User.find({});
@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-// ✅ Fetch User by ID
+// ✅ Fetch User by ID & Auto-Move Expired Habits
 router.get('/:userId', async (req, res) => {
     const { userId } = req.params;
 
@@ -34,22 +34,42 @@ router.get('/:userId', async (req, res) => {
         const user = await User.findById(userId);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
+        const today = new Date().toISOString().split("T")[0];
+
+        user.habits = user.habits.filter(habit => {
+            if (habit.endDate && new Date(habit.endDate).toISOString().split("T")[0] <= today) {
+                user.history.push({ ...habit.toObject(), endDate: habit.endDate });
+                return false; // ✅ Remove expired habit from active habits
+            }
+            return true;
+        });
+
+        await user.save();
         res.status(200).json(user);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching user data', error });
     }
 });
 
-// ✅ Add Habit
+// ✅ Add Habit with Completion Dates
 router.post('/:userId/habits', async (req, res) => {
     const { userId } = req.params;
-    const { name } = req.body;
+    const { name, startDate, endDate } = req.body;
 
     try {
         const user = await User.findById(userId);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        const newHabit = { id: Date.now().toString(), name, streak: 0, lastCompleted: null };
+        const newHabit = {
+            id: Date.now().toString(),
+            name,
+            streak: 0,
+            lastCompleted: null,
+            startDate: startDate || new Date(),
+            endDate: endDate || null,
+            completionDates: []
+        };
+
         user.habits.push(newHabit);
         await user.save();
 
@@ -59,10 +79,10 @@ router.post('/:userId/habits', async (req, res) => {
     }
 });
 
-// ✅ Update Habit Streak (With Confirmation Logic)
+// ✅ Update Habit Streak (Auto-Move Expired Habits)
 router.put('/:userId/habits/:habitId', async (req, res) => {
     const { userId, habitId } = req.params;
-    const { lastCompleted, forceIncrement } = req.body;
+    const { forceIncrement } = req.body;
 
     try {
         const user = await User.findById(userId);
@@ -73,15 +93,22 @@ router.put('/:userId/habits/:habitId', async (req, res) => {
 
         const today = new Date().toISOString().split("T")[0];
 
-        // Prevent multiple streak updates unless forced
+        if (habit.endDate && new Date(habit.endDate) <= new Date()) {
+            const expiredHabit = { ...habit.toObject(), endDate: new Date() };
+            user.history.push(expiredHabit);
+            user.habits = user.habits.filter(h => h.id !== habitId);
+            await user.save();
+            return res.status(200).json({ message: 'Habit expired and moved to history.', history: user.history });
+        }
+
         if (habit.lastCompleted === today && !forceIncrement) {
             return res.status(400).json({ message: 'Streak already updated today' });
         }
 
         habit.streak += 1;
         habit.lastCompleted = today;
+        habit.completionDates.push(new Date().toISOString());
 
-        // Add 10 gold for every 7-day streak
         if (habit.streak % 7 === 0) user.gold += 10;
 
         await user.save();
@@ -91,7 +118,7 @@ router.put('/:userId/habits/:habitId', async (req, res) => {
     }
 });
 
-// ✅ Delete Habit
+// ✅ Delete Habit & Move to History
 router.delete('/:userId/habits/:habitId', async (req, res) => {
     const { userId, habitId } = req.params;
 
@@ -99,19 +126,76 @@ router.delete('/:userId/habits/:habitId', async (req, res) => {
         const user = await User.findById(userId);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        const updatedHabits = user.habits.filter(h => h.id !== habitId);
+        const habitToDelete = user.habits.find(h => h.id === habitId);
+        if (!habitToDelete) return res.status(404).json({ message: 'Habit not found' });
 
-        if (user.habits.length === updatedHabits.length) {
-            return res.status(404).json({ message: 'Habit not found' });
-        }
+        const habitCopy = { ...habitToDelete.toObject(), endDate: new Date() };
+        user.history.push(habitCopy);
+        user.habits = user.habits.filter(h => h.id !== habitId);
 
-        user.habits = updatedHabits;
         await user.save();
-
-        res.status(200).json({ message: 'Habit deleted successfully' });
+        res.status(200).json({ message: 'Habit moved to history.', history: user.history });
     } catch (error) {
         res.status(500).json({ message: 'Error deleting habit', error });
     }
 });
+
+// ✅ Delete History by ID
+router.delete('/:userId/history/:historyId', async (req, res) => {
+    const { userId, historyId } = req.params;
+
+    try {
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        user.history = user.history.filter(h => h.id !== historyId);
+        await user.save();
+
+        res.status(200).json({ message: 'History entry deleted successfully.', history: user.history });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting history entry', error });
+    }
+});
+
+// ✅ Get Habit History with Date and Time
+router.get('/:userId/history', async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const enrichedHistory = user.history.map(habit => ({
+            ...habit.toObject(),
+            completionDates: habit.completionDates.map(date => new Date(date).toLocaleString())
+        }));
+
+        res.status(200).json({ history: enrichedHistory });
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching history', error });
+    }
+});
+// ✅ Delete History by ID
+router.delete('/:userId/history/:historyId', async (req, res) => {
+    const { userId, historyId } = req.params;
+
+    try {
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const historyIndex = user.history.findIndex(h => h.id === historyId);
+        if (historyIndex === -1) {
+            return res.status(404).json({ message: 'History entry not found' });
+        }
+
+        user.history.splice(historyIndex, 1); // Remove the entry
+        await user.save();
+
+        res.status(200).json({ message: 'History entry deleted successfully.', history: user.history });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting history entry', error });
+    }
+});
+
 
 export default router;

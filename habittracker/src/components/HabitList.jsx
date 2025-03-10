@@ -5,7 +5,9 @@ const HabitList = () => {
     const [user, setUser] = useState(null);
     const [showConfetti, setShowConfetti] = useState(false);
     const [showModal, setShowModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [habitToConfirm, setHabitToConfirm] = useState(null);
+    const [expandedHabits, setExpandedHabits] = useState({});
 
     useEffect(() => {
         const storedUser = localStorage.getItem("currentUser");
@@ -35,6 +37,13 @@ const HabitList = () => {
         } catch (error) {
             console.error("Error fetching user data:", error);
         }
+    };
+
+    const toggleCompletionDates = (habitId) => {
+        setExpandedHabits(prev => ({
+            ...prev,
+            [habitId]: !prev[habitId]
+        }));
     };
 
     const handleIncrement = async (habitId) => {
@@ -109,6 +118,16 @@ const HabitList = () => {
         } catch (error) {
             console.error("Error deleting habit:", error);
         }
+
+        setShowDeleteModal(false);
+    };
+
+    const filterActiveHabits = (habits) => {
+        const today = new Date().toISOString().split("T")[0];
+        return habits.filter(habit => {
+            const habitStart = new Date(habit.startDate).toISOString().split("T")[0];
+            return habitStart <= today;
+        });
     };
 
     return (
@@ -150,34 +169,112 @@ const HabitList = () => {
                 </div>
             )}
 
-            <h2 className="text-3xl font-bold text-center text-blue-600">Habit Tracker</h2>
-
-            {user && user.habits.length === 0 && (
-                <p className="text-center text-gray-500">No habits found.</p>
-            )}
-
-            {user &&
-                user.habits.map((habit) => (
-                    <div key={habit.id} className="habit-card bg-white p-4 rounded-lg shadow-md my-4">
-                        <h3 className="text-xl font-semibold">{habit.name}</h3>
-                        <p className="text-gray-600">Streak: {habit.streak} days</p>
-                        <p className="text-gray-400">Last completed: {habit.lastCompleted || "Never"}</p>
-                        <div className="flex gap-2 mt-3">
+            {showDeleteModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-80">
+                        <h3 className="text-lg font-bold mb-3">Confirm Deletion</h3>
+                        <p className="text-gray-600">
+                            Are you sure you want to delete the habit <strong>{habitToConfirm?.name}</strong>?
+                        </p>
+                        <div className="flex justify-end gap-2 mt-4">
                             <button
-                                onClick={() => handleIncrement(habit.id)}
-                                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                            >
-                                Mark Done
-                            </button>
-                            <button
-                                onClick={() => handleDelete(habit.id)}
+                                onClick={() => handleDelete(habitToConfirm.id)}
                                 className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
                             >
-                                Delete
+                                Yes
+                            </button>
+                            <button
+                                onClick={() => setShowDeleteModal(false)}
+                                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                            >
+                                No
                             </button>
                         </div>
                     </div>
-                ))}
+                </div>
+            )}
+
+            <h2 className="text-3xl font-bold text-center text-blue-600 mb-8">Active Habits</h2>
+
+            {user && filterActiveHabits(user.habits).length === 0 && (
+                <div className="text-center bg-white p-6 rounded-lg shadow-md">
+                    <p className="text-gray-500 text-lg">No active habits found. Start by adding a new habit!</p>
+                </div>
+            )}
+
+            {user && filterActiveHabits(user.habits).map((habit) => (
+                <div key={habit.id} className="habit-card bg-white p-6 rounded-lg shadow-md my-6">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <h3 className="text-xl font-semibold text-gray-800">{habit.name}</h3>
+                            <p className="text-gray-600 mt-2">
+                                Streak: <span className="font-medium">{habit.streak} days</span>
+                            </p>
+                            <p className="text-gray-500 text-sm mt-1">
+                                Started: {new Date(habit.startDate).toLocaleDateString()}
+                            </p>
+                            {habit.endDate && (
+                                <p className="text-gray-500 text-sm">
+                                    Target End: {new Date(habit.endDate).toLocaleDateString()}
+                                </p>
+                            )}
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <button
+                                onClick={() => handleIncrement(habit.id)}
+                                className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                            >
+                                ✅ Mark Done
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setHabitToConfirm(habit);
+                                    setShowDeleteModal(true);
+                                }}
+                                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
+                            >
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </div>
+
+                    {habit.completionDates && habit.completionDates.length > 0 && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                            <button
+                                onClick={() => toggleCompletionDates(habit.id)}
+                                className="w-full text-left flex items-center justify-between"
+                            >
+                                <h4 className="text-md font-medium text-gray-700">
+                                    Completion History ({habit.completionDates.length})
+                                </h4>
+                                <svg
+                                    className={`w-5 h-5 transform transition-transform ${expandedHabits[habit.id] ? 'rotate-180' : ''}`}
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M19 9l-7 7-7-7"
+                                    />
+                                </svg>
+                            </button>
+                            
+                            {expandedHabits[habit.id] && (
+                                <div className="grid grid-cols-2 gap-2 mt-2">
+                                    {habit.completionDates.map((date, index) => (
+                                        <div key={index} className="text-sm bg-gray-50 p-2 rounded">
+                                            {new Date(date).toLocaleString()}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            ))}
         </div>
     );
 };

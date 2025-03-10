@@ -1,6 +1,5 @@
-// App Component
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from "react-router-dom";
 import HabitList from "./components/HabitList";
 import AddHabit from "./components/AddHabit";
 import Login from "./components/Auth/Login";
@@ -51,39 +50,49 @@ function App() {
   return (
     <Router>
       {authenticated && <NavBar />}
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
-        <Route
-          path="/login"
-          element={
-            authenticated ? <Navigate to="/habits" /> : <Login setAuthenticated={handleLogin} />
-          }
-        />
-        <Route
-          path="/signup"
-          element={
-            authenticated ? <Navigate to="/habits" /> : <Signup setAuthenticated={handleLogin} />
-          }
-        />
-        <Route
-          path="/habits"
-          element={
-            authenticated ? (
-              <div className="app p-6 bg-gray-100 min-h-screen text-center">
-                <h1 className="text-3xl font-bold text-blue-600 mb-4">Habit Tracker</h1>
-                <AddHabit userId={userId} setHabits={setHabits} />
-                <HabitList />
-              </div>
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
-        <Route
-          path="/profile"
-          element={authenticated ? <Profile setAuthenticated={setAuthenticated} /> : <Navigate to="/login" />}
-        />
-      </Routes>
+      <div className="min-h-screen bg-white p-8 text-black">
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" />} />
+          <Route
+            path="/login"
+            element={
+              authenticated ? <Navigate to="/habits" /> : <Login setAuthenticated={handleLogin} />
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              authenticated ? <Navigate to="/habits" /> : <Signup setAuthenticated={handleLogin} />
+            }
+          />
+          <Route
+            path="/habits"
+            element={
+              authenticated ? (
+                <div className="app p-6 text-center">
+                  <Link
+                    to="/add-habit"
+                    className="inline-block bg-green-500 text-white px-10 py-2 rounded-lg hover:bg-green-600 transition-all mb-4 shadow-lg"
+                  >
+                     ➕ Add Habit
+                  </Link>
+                  <HabitList />
+                </div>
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
+            path="/add-habit"
+            element={authenticated ? <AddHabit userId={userId} setHabits={setHabits} /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/profile"
+            element={authenticated ? <Profile setAuthenticated={setAuthenticated} /> : <Navigate to="/login" />}
+          />
+        </Routes>
+      </div>
     </Router>
   );
 }
