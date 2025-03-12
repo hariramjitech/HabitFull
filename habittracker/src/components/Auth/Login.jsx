@@ -1,11 +1,13 @@
-import React, { useState } from "react";  
-import { useNavigate, Link } from "react-router-dom"; 
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { FiLogIn, FiMail, FiLock, FiLoader } from "react-icons/fi"; // React Icons
 
 const Login = ({ setAuthenticated }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false); // Added loading state
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -45,40 +47,107 @@ const Login = ({ setAuthenticated }) => {
   };
 
   return (
-    <div className="auth-container min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h2 className="text-3xl font-bold text-center text-blue-600 mb-6">Login</h2>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 to-purple-50 p-6"
+    >
+      <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md text-center border-t-4 border-blue-500">
+        <motion.h2
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="text-3xl font-bold text-blue-600 mb-6 flex items-center justify-center gap-2"
+        >
+          <FiLogIn className="text-blue-600" /> Login
+        </motion.h2>
+
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
-          <input
-            type="email"
-            className="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <input
-            type="password"
-            className="p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <button
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="w-full"
+          >
+            <div className="relative">
+              <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="email"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            className="w-full"
+          >
+            <div className="relative">
+              <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="password"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+          </motion.div>
+
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.8 }}
             type="submit"
             disabled={loading}
-            className={`p-3 text-white rounded-md transition ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'}`}
+            className={`w-full py-3 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
+              loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
+            }`}
           >
-            {loading ? "Logging in..." : "Login"}
-          </button>
-          {error && <p className="text-red-500 text-center">{error}</p>}
+            {loading ? (
+              <>
+                <FiLoader className="animate-spin" /> Logging in...
+              </>
+            ) : (
+              <>
+                <FiLogIn /> Login
+              </>
+            )}
+          </motion.button>
+
+          {error && (
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 1 }}
+              className="text-red-500 text-center"
+            >
+              {error}
+            </motion.p>
+          )}
         </form>
-        <p className="text-center text-gray-500 mt-4">
-          New user? <Link to="/signup" className="text-blue-500 hover:underline">Sign up here</Link>
-        </p>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 1.2 }}
+          className="text-center text-gray-500 mt-4"
+        >
+          New user?{" "}
+          <Link to="/signup" className="text-blue-500 hover:underline">
+            Sign up here
+          </Link>
+        </motion.p>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

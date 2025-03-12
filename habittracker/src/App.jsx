@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { FiPlus, FiLogIn, FiUserPlus, FiUser, FiList } from "react-icons/fi"; // React Icons
 import HabitList from "./components/HabitList";
 import AddHabit from "./components/AddHabit";
 import Login from "./components/Auth/Login";
@@ -50,34 +52,59 @@ function App() {
   return (
     <Router>
       {authenticated && <NavBar />}
-      <div className="min-h-screen bg-white p-8 text-black">
+      <div className="min-h-screen bg-gradient-to-r from-blue-50 to-purple-50 p-8 text-gray-800">
         <Routes>
           <Route path="/" element={<Navigate to="/login" />} />
           <Route
             path="/login"
             element={
-              authenticated ? <Navigate to="/habits" /> : <Login setAuthenticated={handleLogin} />
+              authenticated ? (
+                <Navigate to="/habits" />
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Login setAuthenticated={handleLogin} />
+                </motion.div>
+              )
             }
           />
           <Route
             path="/signup"
             element={
-              authenticated ? <Navigate to="/habits" /> : <Signup setAuthenticated={handleLogin} />
+              authenticated ? (
+                <Navigate to="/habits" />
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Signup setAuthenticated={handleLogin} />
+                </motion.div>
+              )
             }
           />
           <Route
             path="/habits"
             element={
               authenticated ? (
-                <div className="app p-6 text-center">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="app p-6 text-center"
+                >
                   <Link
                     to="/add-habit"
-                    className="inline-block bg-green-500 text-white px-10 py-2 rounded-lg hover:bg-green-600 transition-all mb-4 shadow-lg"
+                    className="inline-flex items-center bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all mb-8 shadow-lg transform hover:scale-105"
                   >
-                     ➕ Add Habit
+                    <FiPlus className="mr-2" /> Add Habit
                   </Link>
-                  <HabitList />
-                </div>
+                  <HabitList habits={habits} setHabits={setHabits} />
+                </motion.div>
               ) : (
                 <Navigate to="/login" />
               )
@@ -85,11 +112,35 @@ function App() {
           />
           <Route
             path="/add-habit"
-            element={authenticated ? <AddHabit userId={userId} setHabits={setHabits} /> : <Navigate to="/login" />}
+            element={
+              authenticated ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <AddHabit userId={userId} setHabits={setHabits} />
+                </motion.div>
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
           />
           <Route
             path="/profile"
-            element={authenticated ? <Profile setAuthenticated={setAuthenticated} /> : <Navigate to="/login" />}
+            element={
+              authenticated ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Profile setAuthenticated={setAuthenticated} />
+                </motion.div>
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
           />
         </Routes>
       </div>

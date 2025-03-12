@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { FiPlus, FiCalendar, FiAward, FiCheckCircle } from "react-icons/fi"; // React Icons
 
 const AddHabit = ({ userId, setHabits }) => {
   const [name, setName] = useState("");
@@ -79,22 +81,55 @@ const AddHabit = ({ userId, setHabits }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-800 p-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 to-purple-50 p-6"
+    >
       <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center border-t-4 border-blue-500">
-        <h1 className="text-3xl font-bold text-blue-600 mb-4">Create a New Habit</h1>
-        <p className="text-sm text-gray-500 mb-6">Build consistency and earn rewards for maintaining streaks!</p>
+        <motion.h1
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="text-3xl font-bold text-blue-600 mb-4 flex items-center justify-center gap-2"
+        >
+          <FiPlus className="text-blue-600" /> Create a New Habit
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="text-sm text-gray-500 mb-6"
+        >
+          Build consistency and earn rewards for maintaining streaks!
+        </motion.p>
 
         <form onSubmit={handleSubmit} className="flex flex-col items-center space-y-4">
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter habit name"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            className="w-full"
+          >
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter habit name"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+          </motion.div>
 
-          <div className="w-full flex flex-col gap-2">
-            <label className="text-blue-600 text-left">Start Date</label>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.8 }}
+            className="w-full flex flex-col gap-2"
+          >
+            <label className="text-blue-600 text-left flex items-center gap-2">
+              <FiCalendar /> Start Date
+            </label>
             <input
               type="date"
               value={startDate}
@@ -102,38 +137,62 @@ const AddHabit = ({ userId, setHabits }) => {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
 
-            <label className="text-blue-600 text-left">End Date</label>
+            <label className="text-blue-600 text-left flex items-center gap-2">
+              <FiCalendar /> End Date
+            </label>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
-          </div>
+          </motion.div>
 
           {goldReward > 0 && (
-            <p className="text-blue-600 text-lg">Earn {goldReward} gold for completing this streak!</p>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 1 }}
+              className="text-blue-600 text-lg flex items-center gap-2"
+            >
+              <FiAward /> Earn {goldReward} gold for completing this streak!
+            </motion.p>
           )}
 
           {motivationalMessage && (
-            <p className="text-green-500 text-lg animate-bounce">{motivationalMessage}</p>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 1.2 }}
+              className="text-green-500 text-lg animate-bounce flex items-center gap-2"
+            >
+              <FiCheckCircle /> {motivationalMessage}
+            </motion.p>
           )}
 
-          <button
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 1.4 }}
             type="submit"
-            className="bg-blue-600 text-white font-bold w-full py-3 rounded-lg hover:bg-blue-700 transition-all"
+            className="bg-blue-600 text-white font-bold w-full py-3 rounded-lg hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
           >
-            Add Habit
-          </button>
+            <FiPlus /> Add Habit
+          </motion.button>
         </form>
 
         {successMessage && (
-          <div className="fixed top-4 right-4 bg-green-500 text-white py-2 px-4 rounded-lg shadow-md animate-slide-in">
-            {successMessage}
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="fixed top-4 right-4 bg-green-500 text-white py-2 px-4 rounded-lg shadow-md flex items-center gap-2"
+          >
+            <FiCheckCircle /> {successMessage}
+          </motion.div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 };
 
